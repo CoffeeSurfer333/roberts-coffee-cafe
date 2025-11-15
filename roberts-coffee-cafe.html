@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robert's Coffee Cafe</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            line-height: 1.6;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+        }
+
+        .tagline {
+            font-size: 1.35rem;
+            color: #ffffff;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: #f0f0f0;
+            margin-bottom: 3rem;
+            font-size: 1rem;
+            line-height: 1.8;
+            margin-top: 0.5rem;
+        }
+
+        .subtitle strong {
+            color: #d97706;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            margin-bottom: 3rem;
+        }
+
+        .tab {
+            padding: 0.75rem 2rem;
+            background: transparent;
+            border: none;
+            color: #999;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #fff;
+            border-bottom-color: #d97706;
+        }
+
+        .recipes-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .recipes-grid {
+                grid-template-columns: 1fr;
+            }
+            h1 {
+                font-size: 2.5rem;
+            }
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .recipe-card {
+            background: #1a1a1a;
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .recipe-card:hover {
+            transform: translateY(-8px);
+        }
+
+        .recipe-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #d97706 0%, #92400e 100%);
+            display: block;
+        }
+
+        .recipe-image.loaded {
+            background: none;
+        }
+
+        .recipe-content {
+            padding: 1.5rem;
+        }
+
+        .recipe-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: rgba(217, 119, 6, 0.2);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: #d97706;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+        }
+
+        .recipe-name {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .recipe-description {
+            color: #999;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+
+        .recipe-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: #666;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            border-radius: 24px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #333;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .modal-header {
+            position: relative;
+        }
+
+        .modal-image {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #d97706 0%, #92400e 100%);
+            border-radius: 24px 24px 0 0;
+            display: block;
+        }
+
+        .modal-image.loaded {
+            background: none;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .detail-section h3 {
+            color: #d97706;
+            margin-bottom: 1rem;
+        }
+
+        .ingredient-item, .step-item {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1>Robert's Coffee Cafe</h1>
+        <p class="tagline">Premium Homemade Coffee Creations</p>
+        <p class="subtitle">
+            <strong>No artificial sweeteners. No seed oils. No fake flavors.</strong><br>
+            Just real ingredients that elevate your daily ritual.
+        </p>
+    </div>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('creamers')">Creamers</button>
+            <button class="tab" onclick="switchTab('syrups')">Simple Syrups</button>
+            <button class="tab" onclick="switchTab('coldcoffee')">Cold Coffee</button>
+        </div>
+        <div id="recipes-grid" class="recipes-grid"></div>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="modal-close" onclick="closeModal()">×</button>
+                <div id="modal-image" class="modal-image"></div>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        const recipes = {
+            creamers: [
+                {
+                    name: "Cinnamon Brown Sugar",
+                    badge: "Robert's Favorite",
+                    image: "coffee-cafe-images/cinnamon-brown-sugar.webp",
+                    description: "Warm cinnamon with rich brown sugar sweetness",
+                    time: "10 min",
+                    servings: "16 servings",
+                    ingredients: [
+                        "2 cups heavy cream",
+                        "1 cup whole milk",
+                        "1/2 cup brown sugar",
+                        "2 tsp cinnamon",
+                        "1 tsp vanilla extract"
+                    ],
+                    steps: [
+                        "Combine cream and milk in saucepan",
+                        "Add brown sugar and cinnamon",
+                        "Heat on medium, stirring until sugar dissolves",
+                        "Remove from heat, add vanilla",
+                        "Cool and store in glass jar"
+                    ]
+                },
+                {
+                    name: "Vanilla Bean",
+                    badge: "Classic",
+                    image: "coffee-cafe-images/vanilla-bean.webp",
+                    description: "Pure vanilla with a smooth, creamy finish",
+                    time: "10 min",
+                    servings: "16 servings",
+                    ingredients: [
+                        "2 cups heavy cream",
+                        "1 cup whole milk",
+                        "1/3 cup sugar",
+                        "2 vanilla beans (or 2 tbsp extract)",
+                        "Pinch of salt"
+                    ],
+                    steps: [
+                        "Split vanilla beans and scrape seeds",
+                        "Heat cream, milk, sugar with vanilla pod and seeds",
+                        "Simmer 5 minutes, stirring occasionally",
+                        "Remove from heat, discard pod",
+                        "Cool completely before storing"
+                    ]
+                },
+                {
+                    name: "Pumpkin Spice",
+                    badge: "Seasonal",
+                    image: "coffee-cafe-images/pumpkin-spice.webp",
+                    description: "Fall spices with real pumpkin puree",
+                    time: "15 min",
+                    servings: "16 servings",
+                    ingredients: [
+                        "2 cups heavy cream",
+                        "1 cup whole milk",
+                        "1/2 cup pumpkin puree",
+                        "1/3 cup maple syrup",
+                        "2 tsp pumpkin pie spice",
+                        "1 tsp vanilla"
+                    ],
+                    steps: [
+                        "Whisk pumpkin puree with spices",
+                        "Add cream, milk, and maple syrup",
+                        "Heat gently, whisking smooth",
+                        "Simmer 5 minutes",
+                        "Strain through fine mesh if desired",
+                        "Add vanilla, cool and store"
+                    ]
+                }
+            ],
+            syrups: [
+                {
+                    name: "Classic Simple Syrup",
+                    badge: "Essential",
+                    image: "coffee-cafe-images/simple-syrup.webp",
+                    description: "Perfect sweetness for any coffee drink",
+                    time: "5 min",
+                    servings: "12 servings",
+                    ingredients: [
+                        "1 cup water",
+                        "1 cup sugar"
+                    ],
+                    steps: [
+                        "Combine water and sugar in saucepan",
+                        "Heat on medium, stirring until sugar dissolves",
+                        "Bring to brief boil",
+                        "Remove from heat immediately",
+                        "Cool completely",
+                        "Store in glass bottle up to 1 month"
+                    ]
+                },
+                {
+                    name: "Honey Lavender",
+                    badge: "Floral",
+                    image: "coffee-cafe-images/honey-lavender.webp",
+                    description: "Delicate lavender with natural honey",
+                    time: "10 min",
+                    servings: "12 servings",
+                    ingredients: [
+                        "1 cup water",
+                        "1 cup honey",
+                        "2 tbsp dried lavender buds"
+                    ],
+                    steps: [
+                        "Heat water to simmer",
+                        "Add lavender, steep 5 minutes",
+                        "Strain out lavender",
+                        "Stir in honey until dissolved",
+                        "Cool completely before storing"
+                    ]
+                },
+                {
+                    name: "Maple Cinnamon",
+                    badge: "Warming",
+                    image: "coffee-cafe-images/maple-cinnamon.webp",
+                    description: "Rich maple with aromatic cinnamon",
+                    time: "8 min",
+                    servings: "12 servings",
+                    ingredients: [
+                        "1 cup pure maple syrup",
+                        "1/2 cup water",
+                        "3 cinnamon sticks",
+                        "1 tsp vanilla extract"
+                    ],
+                    steps: [
+                        "Combine maple syrup, water, cinnamon sticks",
+                        "Simmer gently 5 minutes",
+                        "Remove from heat",
+                        "Add vanilla extract",
+                        "Let cool with cinnamon sticks",
+                        "Strain and bottle"
+                    ]
+                }
+            ],
+            coldcoffee: [
+                {
+                    name: "Cold Brew Concentrate",
+                    badge: "Foundation",
+                    image: "coffee-cafe-images/cold-brew.webp",
+                    description: "Smooth, low-acid cold brew base",
+                    time: "12-24 hours",
+                    servings: "8 servings",
+                    ingredients: [
+                        "1 cup coarsely ground coffee",
+                        "4 cups cold filtered water"
+                    ],
+                    steps: [
+                        "Combine coffee and water in large jar",
+                        "Stir gently to saturate grounds",
+                        "Cover and refrigerate 12-24 hours",
+                        "Strain through fine mesh and coffee filter",
+                        "Dilute 1:1 with water or milk when serving",
+                        "Store concentrate up to 2 weeks"
+                    ]
+                },
+                {
+                    name: "Iced Vanilla Latte",
+                    badge: "Crowd Pleaser",
+                    image: "coffee-cafe-images/iced-vanilla-latte.webp",
+                    description: "Creamy vanilla iced coffee perfection",
+                    time: "5 min",
+                    servings: "1 serving",
+                    ingredients: [
+                        "1 cup cold brew concentrate (diluted)",
+                        "1/2 cup milk of choice",
+                        "2 tbsp vanilla syrup",
+                        "Ice cubes"
+                    ],
+                    steps: [
+                        "Fill glass with ice",
+                        "Add vanilla syrup",
+                        "Pour in cold brew",
+                        "Add milk",
+                        "Stir gently and enjoy"
+                    ]
+                },
+                {
+                    name: "Cinnamon Dolce Cold Foam",
+                    badge: "Premium",
+                    image: "coffee-cafe-images/cinnamon-cold-foam.webp",
+                    description: "Topped with sweet cinnamon foam",
+                    time: "8 min",
+                    servings: "1 serving",
+                    ingredients: [
+                        "1 cup cold brew",
+                        "2 tbsp cinnamon syrup",
+                        "1/4 cup heavy cream",
+                        "1 tbsp powdered sugar",
+                        "1/2 tsp cinnamon",
+                        "Ice"
+                    ],
+                    steps: [
+                        "Mix cold brew with cinnamon syrup over ice",
+                        "In separate container, combine cream, sugar, cinnamon",
+                        "Froth with milk frother until thick foam forms",
+                        "Pour coffee into glass",
+                        "Spoon cold foam on top",
+                        "Dust with extra cinnamon"
+                    ]
+                }
+            ]
+        };
+
+        let currentTab = 'creamers';
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            renderRecipes();
+        }
+
+        function renderRecipes() {
+            const grid = document.getElementById('recipes-grid');
+            const items = recipes[currentTab];
+
+            grid.innerHTML = items.map((recipe, index) => `
+                <div class="recipe-card" onclick="openModal(${index})">
+                    <img src="${recipe.image}"
+                         alt="${recipe.name}"
+                         class="recipe-image"
+                         onerror="this.style.display='block'; this.classList.remove('loaded')"
+                         onload="this.classList.add('loaded')">
+                    <div class="recipe-content">
+                        <span class="recipe-badge">${recipe.badge}</span>
+                        <h3 class="recipe-name">${recipe.name}</h3>
+                        <p class="recipe-description">${recipe.description}</p>
+                        <div class="recipe-meta">
+                            <span>⏱ ${recipe.time}</span>
+                            <span>🔢 ${recipe.servings}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openModal(index) {
+            const recipe = recipes[currentTab][index];
+            const modal = document.getElementById('modal');
+            const modalBody = document.getElementById('modal-body');
+            const modalImage = document.getElementById('modal-image');
+
+            // Update modal image
+            modalImage.innerHTML = `<img src="${recipe.image}"
+                                         alt="${recipe.name}"
+                                         class="modal-image"
+                                         onerror="this.style.display='block'; this.classList.remove('loaded')"
+                                         onload="this.classList.add('loaded')">`;
+
+            modalBody.innerHTML = `
+                <h2 style="margin-bottom: 1rem;">${recipe.name}</h2>
+                <p style="color: #999; margin-bottom: 2rem;">${recipe.description}</p>
+                <div class="detail-grid">
+                    <div class="detail-section">
+                        <h3>Ingredients</h3>
+                        ${recipe.ingredients.map(ing => `
+                            <div class="ingredient-item">
+                                <span style="color: #d97706;">•</span>
+                                <span>${ing}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="detail-section">
+                        <h3>Instructions</h3>
+                        ${recipe.steps.map((step, i) => `
+                            <div class="step-item">
+                                <span style="color: #d97706; font-weight: bold;">${i + 1}.</span>
+                                <span>${step}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        // Close modal on background click
+        document.getElementById('modal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // Initial render
+        renderRecipes();
+    </script>
+</body>
+</html>
